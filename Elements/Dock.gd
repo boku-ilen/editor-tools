@@ -1,25 +1,31 @@
 extends TabContainer
 class_name Dock
 
+#
+# A "dock" is a tabcontainer to/from which one can drag and drop "ModularTabs"
+# (see ModularTab.gd/.tscn). It will not be visible if it has no children.
+#
+
+
 var main_ui: Control
 var currently_dragging: bool = false
 var is_inside_tab_bar: bool = false
+# If the visibility changes, also message the "Side" (see Side.gd)
 signal state_changed(active)
 
 
-func _ready():
-	connect("tab_selected", self, "signal_tab")
-	check_state()
+func _ready() -> void:
+	check_visibility()
 
 
-func _input(input: InputEvent):
+func _input(input: InputEvent) -> void:
 	if input is InputEventMouseButton:
 		handle_mouse_button(input)
 	if input is InputEventMouseMotion:
 		handle_mouse_motion(input)
 
 
-func handle_mouse_button(input: InputEventMouseButton):
+func handle_mouse_button(input: InputEventMouseButton) -> void:
 	if input.button_index == BUTTON_LEFT:
 		if input.pressed == false:
 			currently_dragging = false
@@ -34,7 +40,7 @@ func handle_mouse_button(input: InputEventMouseButton):
 				currently_dragging = true
 
 
-func handle_mouse_motion(input: InputEventMouseMotion):
+func handle_mouse_motion(input: InputEventMouseMotion) -> void:
 	if not is_inside_tab_bar(input.global_position):
 		is_inside_tab_bar = false
 		if currently_dragging:
@@ -49,6 +55,8 @@ func handle_mouse_motion(input: InputEventMouseMotion):
 		is_inside_tab_bar = true
 
 
+# Check if a specific position is inside the small bar of a dock, where the 
+# individual tabs are visualized
 func is_inside_tab_bar(position: Vector2) -> bool:
 	var global_tab_bar_extent = rect_global_position + Vector2(rect_size.x, 23) 
 	if position.x < rect_global_position.x or position.y < rect_global_position.y:
@@ -58,20 +66,23 @@ func is_inside_tab_bar(position: Vector2) -> bool:
 	return true
 
 
-func add_child(node: Node, default=false):
+# Override add_child to see whether the child count hits 0 or not
+func add_child(node: Node, default=false) -> void:
 	.add_child(node, default)
-	check_state()
+	check_visibility()
 
 
-func remove_child(node: Node):
+# Override remove_child to see whether the child count hits 0 or not
+func remove_child(node: Node) -> void:
 	.remove_child(node)
-	check_state()
+	check_visibility()
 
 
-func check_state():
-	visible = get_child_count() > 0
+func check_visibility():
+	set_visible(get_child_count() > 0)
 
 
+# Override the set_visible function to also emit a signal to the "Side"
 func set_visible(is_visible):
 	visible = is_visible
 	emit_signal("state_changed", is_visible)
