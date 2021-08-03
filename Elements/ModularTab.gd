@@ -1,4 +1,4 @@
-extends Control
+extends GridContainer
 class_name ModularTab
 
 #
@@ -7,19 +7,25 @@ class_name ModularTab
 #
 
 
-var is_mouse_inside setget set_mouse_inside
-var currently_dragging: bool
+var is_docked: bool setget set_docked
+var button_down: bool
+var currently_dragging
 var icon_path: String
+var ui_element: Control
+
+signal docked
+signal undocked
 
 
 func _ready() -> void:
 	# Easy check if mouse is inside or not
-	connect("mouse_entered", self, "set_mouse_inside", [true])
-	connect("mouse_exited", self, "set_mouse_inside", [false])
-
-
-func set_mouse_inside(is_inside: bool) -> void:
-	is_mouse_inside = is_inside
+	$Button.connect("button_up", self, "toggle_ui")
+	$Button.connect("pressed", self, "on_pressed")
+	connect("docked", self, "on_dock")
+	connect("undocked", self, "on_undock")
+	
+	ui_element = get_child(4)
+	set_docked(get_parent() is Dock)
 
 
 func _input(input: InputEvent):
@@ -32,17 +38,46 @@ func _input(input: InputEvent):
 # Set currently_dragging if it is not docked to a "Dock"
 func handle_mouse_button(input: InputEventMouseButton):
 	if input.button_index == BUTTON_LEFT:
-		if not is_docked():
-			if not input.pressed: currently_dragging = false
-			# Only set dragging if the mouse is actually inside the control
-			# or we will end up dragging it all the time
-			else: if is_mouse_inside: currently_dragging  = true
+		if not is_docked:
+			if $Button.is_mouse_inside:
+				if not input.pressed: button_down = false
+				# Only set dragging if the mouse is actually inside the control
+				# or we will end up dragging it all the time
+				else: button_down  = true
 
 
 # Drag the tab
 func handle_mouse_motion(input: InputEventMouseMotion):
-	if currently_dragging: 
+	if button_down:
+		currently_dragging = true
 		rect_global_position = input.global_position
 
 
-func is_docked() -> bool: return get_parent() is Dock
+func set_docked(docked: bool) -> void: 
+	is_docked = docked
+	emit_signal("docked") if docked else emit_signal("undocked")
+
+
+func on_dock() -> void:
+	$Button.visible = false
+	ui_element.visible = true
+	columns = 1
+
+
+func on_undock() -> void: 
+	$Button.visible = true
+	ui_element.visible = false
+	columns = 3
+
+
+func toggle_ui():
+	if not currently_dragging:
+		ui_element.visible = !ui_element.visible
+		$HSeparator.visible = !$HSeparator.visible
+		$VSeperator.visible = !$VSeperator.visible
+		$Spacer.visible = !$Spacer.visible	
+
+
+func on_pressed():
+	if currently_dragging:
+		currently_dragging = false

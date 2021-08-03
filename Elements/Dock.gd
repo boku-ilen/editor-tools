@@ -34,6 +34,7 @@ func handle_mouse_button(input: InputEventMouseButton) -> void:
 					for child in main_ui.floating_ui.get_children():
 						if is_inside_tab_bar(child.rect_global_position) and visible:
 							main_ui.floating_ui.remove_child(child)
+							child.is_docked = true
 							add_child(child)
 		else: 
 			if is_inside_tab_bar: 
@@ -48,8 +49,8 @@ func handle_mouse_motion(input: InputEventMouseMotion) -> void:
 			if modular_tab:
 				remove_child(modular_tab)
 				main_ui.floating_ui.add_child(modular_tab)
-				modular_tab.rect_size = modular_tab.rect_min_size
-				modular_tab.currently_dragging = true
+				modular_tab.button_down = true
+				modular_tab.is_docked = false
 				currently_dragging = false
 	else: 
 		is_inside_tab_bar = true
