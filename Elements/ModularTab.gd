@@ -9,7 +9,8 @@ class_name ModularTab
 
 var is_docked: bool setget set_docked
 var button_down: bool
-var currently_dragging
+var currently_dragging: bool
+var drag_position: Vector2
 var icon_path: String
 var ui_element: Control
 
@@ -20,7 +21,6 @@ signal undocked
 func _ready() -> void:
 	# Easy check if mouse is inside or not
 	$Button.connect("button_up", self, "toggle_ui")
-	$Button.connect("pressed", self, "on_pressed")
 	connect("docked", self, "on_dock")
 	connect("undocked", self, "on_undock")
 	
@@ -43,14 +43,16 @@ func handle_mouse_button(input: InputEventMouseButton):
 				if not input.pressed: button_down = false
 				# Only set dragging if the mouse is actually inside the control
 				# or we will end up dragging it all the time
-				else: button_down  = true
+				else: 
+					button_down = true
+					drag_position = $Button.rect_global_position - input.global_position
 
 
 # Drag the tab
 func handle_mouse_motion(input: InputEventMouseMotion):
 	if button_down:
 		currently_dragging = true
-		rect_global_position = input.global_position
+		rect_global_position = input.global_position + drag_position
 
 
 func set_docked(docked: bool) -> void: 
@@ -75,9 +77,6 @@ func toggle_ui():
 		ui_element.visible = !ui_element.visible
 		$HSeparator.visible = !$HSeparator.visible
 		$VSeperator.visible = !$VSeperator.visible
-		$Spacer.visible = !$Spacer.visible	
-
-
-func on_pressed():
-	if currently_dragging:
+		$Spacer.visible = !$Spacer.visible
+	else:
 		currently_dragging = false
