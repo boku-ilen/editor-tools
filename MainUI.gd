@@ -10,6 +10,7 @@ onready var floating_ui: Control = $FloatingUI
 
 
 func _ready():
+	$MarginContainer.connect("mouse_exited", self, "hint_docking")
 	docks.append($MarginContainer/Split/Left/Left/Top)
 	docks.append($MarginContainer/Split/Left/Left/Bot)
 	docks.append($MarginContainer/Split/Left/Right/Top)
@@ -18,9 +19,11 @@ func _ready():
 	docks.append($MarginContainer/Split/Right/Right/Left/Bot)
 	docks.append($MarginContainer/Split/Right/Right/Right/Top)
 	docks.append($MarginContainer/Split/Right/Right/Right/Bot)
+	docks.append($MarginContainer/Split/Left/Left/Top/HoverArea)
+	docks.append($MarginContainer/Split/Left/Left/Bot/HoverArea)
 	
-	_inject()
 	emit_signal("ui_loaded")
+	_inject()
 
 
 func _inject():
@@ -30,3 +33,14 @@ func _inject():
 			pass
 
 
+func hint_docking():
+	print("exited")
+	print(get_viewport().get_mouse_position().x)
+	print($MarginContainer.rect_global_position.x)
+	print("\n\n")
+	
+	if floating_ui.active_tab:
+		if get_viewport().get_mouse_position().x < $MarginContainer.rect_global_position.x:
+			print("left")
+		elif get_viewport().get_mouse_position().x > $MarginContainer.rect_global_position.x + $MarginContainer.rect_size.x:
+			print("right")

@@ -15,6 +15,7 @@ signal state_changed(active)
 
 
 func _ready() -> void:
+	connect("resized", self, "set_collider_size")
 	check_visibility()
 
 
@@ -25,7 +26,14 @@ func _input(input: InputEvent) -> void:
 		handle_mouse_motion(input)
 
 
-func handle_mouse_button(input: InputEventMouseButton) -> void:
+func _unhandled_input(input: InputEvent):
+	if input is InputEventMouseButton:
+		handle_mouse_button(input, true)
+	elif input is InputEventMouseMotion:
+		handle_mouse_motion(input, true)
+		
+
+func handle_mouse_button(input: InputEventMouseButton, unhandled := false) -> void:
 	if input.button_index == BUTTON_LEFT:
 		if input.pressed == false:
 			currently_dragging = false
@@ -41,7 +49,7 @@ func handle_mouse_button(input: InputEventMouseButton) -> void:
 				currently_dragging = true
 
 
-func handle_mouse_motion(input: InputEventMouseMotion) -> void:
+func handle_mouse_motion(input: InputEventMouseMotion, unhandled := false) -> void:
 	if not is_inside_tab_bar(input.global_position):
 		is_inside_tab_bar = false
 		if currently_dragging:
@@ -80,7 +88,7 @@ func remove_child(node: Node) -> void:
 
 
 func check_visibility():
-	set_visible(get_child_count() > 0)
+	set_visible(get_child_count() > 1)
 
 
 # Override the set_visible function to also emit a signal to the "Side"

@@ -25,7 +25,7 @@ func add_child(node: Node, default=false) -> void:
 
 
 # Override remove_child to disconnect any new docks state_changed signal
-func remove_child(node: Node):
+func remove_child(node: Node) -> void:
 	.remove_child(node)
 	if node is Dock:
 		node.disconnect("state_changed", self, "evaluate_state")
